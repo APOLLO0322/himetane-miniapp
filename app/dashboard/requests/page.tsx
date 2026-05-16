@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, ShoppingCart, Clock, CheckCircle, XCircle, Coins } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 import type { AssetRequest, AssetRequestItem, Asset } from "@/lib/types";
 
 const C = {

@@ -3,6 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import UploadForm from "./UploadForm";
 
+export const dynamic = "force-dynamic";
+
 const C = {
   green: "#007956",
   text: "#292524",

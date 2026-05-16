@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import DashboardClient from "./DashboardClient";
 
+export const dynamic = "force-dynamic";
+
 // 将来: LIFF.getProfile().userId で差し替える
 const LINE_USER_ID = "U_TEST_USER_001";
 
