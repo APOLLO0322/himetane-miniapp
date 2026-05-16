@@ -57,12 +57,28 @@ type RequestWithItems = AssetRequest & {
   items: (AssetRequestItem & { asset: Asset | null })[];
 };
 
+// 将来: LIFF.getProfile().userId で差し替える
+const LINE_USER_ID = "U_TEST_USER_001";
+
 export default async function RequestsPage() {
-  // 最初のクライアントを取得（TODO: 認証後は実ユーザーのIDを使う）
-  const { data: clientRows } = await supabase
-    .from("clients")
-    .select("id, name")
+  // user起点でclientを取得
+  const { data: userRows } = await supabase
+    .from("users")
+    .select("id")
+    .eq("line_user_id", LINE_USER_ID)
     .limit(1);
+
+  const userId = userRows?.[0]?.id ?? null;
+
+  const { data: clientUserRows } = userId
+    ? await supabase.from("client_users").select("client_id").eq("user_id", userId).limit(1)
+    : { data: [] };
+
+  const clientId = clientUserRows?.[0]?.client_id ?? null;
+
+  const { data: clientRows } = clientId
+    ? await supabase.from("clients").select("id, name").eq("id", clientId).limit(1)
+    : { data: [] };
 
   const client = clientRows?.[0];
   if (!client) {
