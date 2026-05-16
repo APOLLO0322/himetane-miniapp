@@ -122,15 +122,15 @@ function ShootCard({ shoot }: { shoot: Shoot }) {
       className="flex items-center justify-between rounded-xl bg-white px-4 py-3"
       style={{ border: `1px solid ${C.border}` }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
           style={{ backgroundColor: C.limePale }}
         >
           <CalendarDays className="h-4 w-4" style={{ color: C.green }} />
         </div>
-        <div>
-          <p className="text-sm font-medium" style={{ color: C.text }}>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium" style={{ color: C.text }}>
             {shoot.title}
           </p>
           {shoot.shoot_date && (
