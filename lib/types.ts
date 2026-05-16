@@ -1,3 +1,19 @@
+export type User = {
+  id: string;
+  line_user_id: string;
+  display_name: string | null;
+  picture_url: string | null;
+  created_at: string;
+};
+
+export type ClientUser = {
+  id: string;
+  user_id: string;
+  client_id: string;
+  role: string | null;
+  created_at: string;
+};
+
 export type Client = {
   id: string;
   name: string;
@@ -101,6 +117,18 @@ export type Database = {
         Row: CreditTransaction;
         Insert: Omit<CreditTransaction, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<CreditTransaction>;
+        Relationships: [];
+      };
+      users: {
+        Row: User;
+        Insert: Omit<User, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<User>;
+        Relationships: [];
+      };
+      client_users: {
+        Row: ClientUser;
+        Insert: Omit<ClientUser, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<ClientUser>;
         Relationships: [];
       };
     };

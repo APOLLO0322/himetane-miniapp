@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Asset, Client, Shoot, CreditTransaction } from "@/lib/types";
+import type { Asset, Client, Shoot, CreditTransaction, User } from "@/lib/types";
 
 // Brand colors
 const C = {
@@ -484,11 +484,13 @@ function SuccessOverlay({ onClose }: { onClose: () => void }) {
 
 // メイン Client Component
 export default function DashboardClient({
+  currentUser,
   client,
   assets,
   shoots,
   transactions,
 }: {
+  currentUser: User;
   client: Client;
   assets: Asset[];
   shoots: Shoot[];
@@ -638,8 +640,11 @@ export default function DashboardClient({
           こんにちは
         </p>
         <p className="text-xl font-bold" style={{ color: C.text }}>
-          {client.name}
+          {currentUser.display_name ?? client.name}
           <span className="font-normal">さん</span>
+        </p>
+        <p className="mt-0.5 text-xs" style={{ color: C.textFaint }}>
+          {client.name}
         </p>
       </div>
 
