@@ -53,9 +53,10 @@ export type Asset = {
 export type AssetRequest = {
   id: string;
   client_id: string;
-  status: "pending" | "approved" | "rejected" | string;
+  status: "pending" | "approved" | "delivered" | string;
   total_credit: number;
   note: string | null;
+  delivery_url: string | null;
   created_at: string;
 };
 

@@ -200,14 +200,24 @@ export default function AdminPage() {
               管理者メニュー
             </p>
           </div>
-          <Link href="/admin/assets/new">
-            <span
-              className="rounded-xl px-3 py-1.5 text-xs font-medium text-white"
-              style={{ backgroundColor: C.green }}
-            >
-              ファイルUP
-            </span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/requests">
+              <span
+                className="rounded-xl px-3 py-1.5 text-xs font-medium"
+                style={{ backgroundColor: C.bgTint, color: C.textMid, border: `1px solid ${C.border}` }}
+              >
+                リクエスト
+              </span>
+            </Link>
+            <Link href="/admin/assets/new">
+              <span
+                className="rounded-xl px-3 py-1.5 text-xs font-medium text-white"
+                style={{ backgroundColor: C.green }}
+              >
+                ファイルUP
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
 

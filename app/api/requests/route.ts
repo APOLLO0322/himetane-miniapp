@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         status: "pending",
         total_credit,
         note: note ?? null,
+        delivery_url: null,
       })
       .select()
       .single();
