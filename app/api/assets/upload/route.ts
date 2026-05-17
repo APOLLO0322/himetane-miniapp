@@ -54,6 +54,7 @@ export async function POST(request: Request) {
         file_url: blob.url,
         tags: null,
         month: null,
+        blob_path: blobPath,
       })
       .select()
       .single();

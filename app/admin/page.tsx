@@ -8,6 +8,7 @@ import {
   Users,
   ChevronRight,
   Inbox,
+  Camera,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -146,6 +147,22 @@ export default async function AdminPage() {
                     {pendingCount}
                   </span>
                 )}
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
+              </div>
+            </Link>
+
+            <Link href="/admin/shoots">
+              <div
+                className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+                style={{ border: `1px solid ${C.border}` }}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: C.limePale }}>
+                  <Camera className="h-5 w-5" style={{ color: C.green }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: C.text }}>撮影管理</p>
+                  <p className="text-xs" style={{ color: C.textFaint }}>撮影フォルダ・素材を管理</p>
+                </div>
                 <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
               </div>
             </Link>

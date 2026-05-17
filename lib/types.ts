@@ -29,6 +29,7 @@ export type Shoot = {
   title: string;
   shoot_date: string | null;
   status: string;
+  memo: string | null;
   created_at: string;
 };
 
@@ -44,9 +45,10 @@ export type Asset = {
   file_url: string | null;
   file_type: string;
   credit_cost: number;
-  status: string;
+  status: "draft" | "selectable" | "requested" | "delivered" | "archived" | string;
   tags: string[] | null;
   month: string | null;
+  blob_path: string | null;
   created_at: string;
 };
 
@@ -76,6 +78,20 @@ export type CreditTransaction = {
   description: string | null;
   transaction_type: string | null;
   created_at: string;
+};
+
+export type Delivery = {
+  id: string;
+  request_id: string;
+  client_id: string;
+  shoot_id: string | null;
+  delivery_title: string | null;
+  delivery_url: string;
+  blob_path: string | null;
+  file_type: "photo" | "video" | "zip" | "other" | string;
+  status: "draft" | "published" | string;
+  created_at: string;
+  delivered_at: string | null;
 };
 
 export type AssetInsert = Omit<Asset, "id" | "created_at"> & {
@@ -132,6 +148,12 @@ export type Database = {
         Row: ClientUser;
         Insert: Omit<ClientUser, "id" | "created_at"> & { id?: string; created_at?: string };
         Update: Partial<ClientUser>;
+        Relationships: [];
+      };
+      deliveries: {
+        Row: Delivery;
+        Insert: Omit<Delivery, "id" | "created_at"> & { id?: string; created_at?: string };
+        Update: Partial<Delivery>;
         Relationships: [];
       };
     };

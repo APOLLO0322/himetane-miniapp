@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { notifyClientDelivered } from "@/lib/notifications";
 
 export async function PATCH(
   request: Request,
@@ -8,9 +9,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { status, delivery_url } = body as {
+    const { status, delivery_url, delivery } = body as {
       status: string;
       delivery_url?: string;
+      delivery?: {
+        delivery_url: string;
+        delivery_title?: string | null;
+        file_type?: string;
+      };
     };
 
     if (!status) {
@@ -65,6 +71,44 @@ export async function PATCH(
           { error: `クレジット記録エラー: ${txError.message}` },
           { status: 500 }
         );
+      }
+
+      // Update delivered_at on any existing deliveries for this request
+      await supabase
+        .from("deliveries")
+        .update({ delivered_at: new Date().toISOString(), status: "published" })
+        .eq("request_id", id);
+
+      // Notify client (placeholder)
+      const { data: clientRows } = await supabase
+        .from("clients")
+        .select("line_user_id")
+        .eq("id", current.client_id)
+        .limit(1);
+      const lineUserId = clientRows?.[0]?.line_user_id ?? "";
+      if (lineUserId) {
+        await notifyClientDelivered(lineUserId, id);
+      }
+    }
+
+    // If a delivery object is provided, insert into deliveries table
+    if (delivery && delivery.delivery_url) {
+      const { error: deliveryError } = await supabase
+        .from("deliveries")
+        .insert({
+          request_id: id,
+          client_id: current.client_id,
+          shoot_id: current.shoot_id ?? null,
+          delivery_title: delivery.delivery_title ?? null,
+          delivery_url: delivery.delivery_url,
+          blob_path: null,
+          file_type: delivery.file_type ?? "other",
+          status: status === "delivered" ? "published" : "draft",
+          delivered_at: status === "delivered" ? new Date().toISOString() : null,
+        });
+
+      if (deliveryError) {
+        console.error("納品データ挿入エラー:", deliveryError.message);
       }
     }
 

@@ -5,10 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Clock, CheckCircle, Package, Coins, Camera, Video,
-  Link2, CheckCircle2, AlertCircle, Loader2,
+  Link2, CheckCircle2, AlertCircle, Loader2, Plus, ExternalLink,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { AssetRequest, AssetRequestItem, Asset, Client } from "@/lib/types";
+import type { AssetRequest, AssetRequestItem, Asset, Client, Delivery } from "@/lib/types";
 
 const C = {
   green: "#007956",
@@ -38,15 +38,24 @@ type Props = {
   request: AssetRequest;
   items: (AssetRequestItem & { asset: Asset | null })[];
   client: Client;
+  deliveries: Delivery[];
 };
 
-export default function RequestDetail({ request, items, client }: Props) {
+export default function RequestDetail({ request, items, client, deliveries: initialDeliveries }: Props) {
   const router = useRouter();
   const [status, setStatus] = useState(request.status);
   const [deliveryUrl, setDeliveryUrl] = useState(request.delivery_url ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Deliveries state
+  const [deliveries, setDeliveries] = useState<Delivery[]>(initialDeliveries);
+  const [newDeliveryTitle, setNewDeliveryTitle] = useState("");
+  const [newDeliveryUrl, setNewDeliveryUrl] = useState("");
+  const [newFileType, setNewFileType] = useState("photo");
+  const [addingDelivery, setAddingDelivery] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   const hasChanged = status !== request.status || deliveryUrl !== (request.delivery_url ?? "");
 
@@ -71,6 +80,38 @@ export default function RequestDetail({ request, items, client }: Props) {
       setError(err instanceof Error ? err.message : "エラーが発生しました");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAddDelivery(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newDeliveryUrl.trim()) {
+      setDeliveryError("納品URLは必須です");
+      return;
+    }
+    setAddingDelivery(true);
+    setDeliveryError(null);
+    try {
+      const res = await fetch(`/api/admin/requests/${request.id}/deliveries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          delivery_url: newDeliveryUrl.trim(),
+          delivery_title: newDeliveryTitle.trim() || null,
+          file_type: newFileType,
+          client_id: client.id,
+          shoot_id: request.shoot_id,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "エラーが発生しました");
+      setDeliveries((prev) => [...prev, json.delivery]);
+      setNewDeliveryTitle("");
+      setNewDeliveryUrl("");
+    } catch (err) {
+      setDeliveryError(err instanceof Error ? err.message : "エラーが発生しました");
+    } finally {
+      setAddingDelivery(false);
     }
   }
 
@@ -109,7 +150,6 @@ export default function RequestDetail({ request, items, client }: Props) {
             return (
               <div key={item.id} className="flex items-center gap-3 rounded-xl bg-white px-3 py-3"
                 style={{ border: `1px solid ${C.border}` }}>
-                {/* サムネ */}
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg"
                   style={{ backgroundColor: C.bgTint }}>
                   {a.preview_url ? (
@@ -122,12 +162,10 @@ export default function RequestDetail({ request, items, client }: Props) {
                     </div>
                   )}
                 </div>
-                {/* 情報 */}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-mono" style={{ color: C.textFaint }}>{a.asset_no}</p>
                   <p className="truncate text-sm font-medium" style={{ color: C.text }}>{a.title}</p>
                 </div>
-                {/* クレジット */}
                 <div className="flex items-center gap-1 rounded-full px-2.5 py-1 shrink-0"
                   style={{ backgroundColor: C.limePale }}>
                   <Coins className="h-3 w-3" style={{ color: C.lime }} />
@@ -138,7 +176,6 @@ export default function RequestDetail({ request, items, client }: Props) {
           })}
         </div>
 
-        {/* 合計 */}
         <div className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
           style={{ backgroundColor: C.limePale, border: `1px solid ${C.limeLight}` }}>
           <span className="text-sm font-medium" style={{ color: C.textMid }}>合計クレジット</span>
@@ -191,6 +228,105 @@ export default function RequestDetail({ request, items, client }: Props) {
         <p className="mt-1 text-xs" style={{ color: C.textFaint }}>
           Google Drive / Dropbox などの共有リンクを入力してください
         </p>
+      </div>
+
+      {/* 納品データセクション */}
+      <div className="rounded-2xl bg-white px-4 py-4" style={{ border: `1px solid ${C.border}` }}>
+        <p className="mb-3 text-sm font-semibold" style={{ color: C.textMid }}>納品データ</p>
+
+        {/* 既存の納品データ */}
+        {deliveries.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {deliveries.map((d) => (
+              <div
+                key={d.id}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                style={{ backgroundColor: C.bgTint, border: `1px solid ${C.border}` }}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate" style={{ color: C.text }}>
+                    {d.delivery_title ?? "納品データ"}
+                  </p>
+                  <p className="text-xs" style={{ color: C.textFaint }}>
+                    {d.file_type}　·　{d.status === "published" ? "公開済み" : "下書き"}
+                  </p>
+                </div>
+                <a
+                  href={d.delivery_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+                  style={{ backgroundColor: C.limePale, color: C.green }}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  開く
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 新規追加フォーム */}
+        <form onSubmit={handleAddDelivery} className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: C.textMid }}>タイトル（任意）</label>
+            <Input
+              value={newDeliveryTitle}
+              onChange={(e) => setNewDeliveryTitle(e.target.value)}
+              placeholder="春コレクション写真データ"
+              className="rounded-xl bg-white text-sm"
+              style={{ borderColor: C.border }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: C.textMid }}>納品URL *</label>
+            <Input
+              value={newDeliveryUrl}
+              onChange={(e) => setNewDeliveryUrl(e.target.value)}
+              placeholder="https://drive.google.com/..."
+              className="rounded-xl bg-white text-sm"
+              style={{ borderColor: C.border }}
+              type="url"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: C.textMid }}>ファイル種別</label>
+            <select
+              value={newFileType}
+              onChange={(e) => setNewFileType(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2 text-sm bg-white"
+              style={{ borderColor: C.border, color: C.text }}
+            >
+              <option value="photo">写真</option>
+              <option value="video">動画</option>
+              <option value="zip">ZIP</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+
+          {deliveryError && (
+            <div
+              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-rose-600"
+              style={{ backgroundColor: "#fff1f2", border: "1px solid #fecdd3" }}
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {deliveryError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={addingDelivery}
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: C.green }}
+          >
+            {addingDelivery ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" />追加中...</>
+            ) : (
+              <><Plus className="h-3.5 w-3.5" />納品データを追加</>
+            )}
+          </button>
+        </form>
       </div>
 
       {/* エラー / 成功 */}

@@ -1,12 +1,12 @@
 import { supabase } from "@/lib/supabase";
+import { getCurrentLineUserId } from "@/lib/auth";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
-// 将来: LIFF.getProfile().userId で差し替える
-const LINE_USER_ID = "U_TEST_USER_001";
-
 export default async function DashboardPage() {
+  const LINE_USER_ID = await getCurrentLineUserId();
+
   // 1. line_user_id でユーザーを取得
   const { data: userRows, error: userError } = await supabase
     .from("users")
@@ -100,13 +100,8 @@ export default async function DashboardPage() {
 
   const clientId = client.id;
 
-  // 4. client_id で素材・撮影・クレジットを並列取得
-  const [assetsRes, shootsRes, transactionsRes] = await Promise.all([
-    supabase
-      .from("assets")
-      .select("*")
-      .eq("client_id", clientId)
-      .order("created_at", { ascending: false }),
+  // 4. 並列取得
+  const [shootsRes, transactionsRes, requestsRes] = await Promise.all([
     supabase
       .from("shoots")
       .select("*")
@@ -117,19 +112,25 @@ export default async function DashboardPage() {
       .select("*")
       .eq("client_id", clientId)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("asset_requests")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false })
+      .limit(3),
   ]);
 
-  if (assetsRes.error) console.error("素材取得エラー:", assetsRes.error.message);
   if (shootsRes.error) console.error("撮影データ取得エラー:", shootsRes.error.message);
   if (transactionsRes.error) console.error("クレジット取得エラー:", transactionsRes.error.message);
+  if (requestsRes.error) console.error("リクエスト取得エラー:", requestsRes.error.message);
 
   return (
     <DashboardClient
       currentUser={currentUser}
       client={client}
-      assets={assetsRes.data ?? []}
       shoots={shootsRes.data ?? []}
       transactions={transactionsRes.data ?? []}
+      recentRequests={requestsRes.data ?? []}
     />
   );
 }

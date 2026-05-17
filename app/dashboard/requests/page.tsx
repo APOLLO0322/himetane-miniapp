@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ShoppingCart, Clock, CheckCircle, XCircle, Coins } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { getCurrentLineUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 import type { AssetRequest, AssetRequestItem, Asset } from "@/lib/types";
@@ -57,10 +58,9 @@ type RequestWithItems = AssetRequest & {
   items: (AssetRequestItem & { asset: Asset | null })[];
 };
 
-// 将来: LIFF.getProfile().userId で差し替える
-const LINE_USER_ID = "U_TEST_USER_001";
-
 export default async function RequestsPage() {
+  const LINE_USER_ID = await getCurrentLineUserId();
+
   // user起点でclientを取得
   const { data: userRows } = await supabase
     .from("users")
@@ -192,8 +192,8 @@ export default async function RequestsPage() {
         ) : (
           <div className="space-y-4">
             {enriched.map((req) => (
+              <Link key={req.id} href={`/dashboard/requests/${req.id}`}>
               <div
-                key={req.id}
                 className="overflow-hidden rounded-2xl bg-white"
                 style={{ border: `1px solid ${C.border}` }}
               >
@@ -261,6 +261,7 @@ export default async function RequestsPage() {
                   </div>
                 </div>
               </div>
+              </Link>
             ))}
           </div>
         )}

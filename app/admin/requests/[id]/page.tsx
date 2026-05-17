@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import type { AssetRequest, AssetRequestItem, Asset, Client } from "@/lib/types";
+import type { AssetRequest, AssetRequestItem, Asset, Client, Delivery } from "@/lib/types";
 import RequestDetail from "./RequestDetail";
 
 export const dynamic = "force-dynamic";
@@ -81,6 +81,15 @@ export default async function AdminRequestDetailPage({
     );
   }
 
+  // 納品データ取得
+  const { data: deliveryRows } = await supabase
+    .from("deliveries")
+    .select("*")
+    .eq("request_id", id)
+    .order("created_at");
+
+  const deliveries = (deliveryRows ?? []) as Delivery[];
+
   return (
     <div className="min-h-screen pb-16" style={{ backgroundColor: C.bgWarm }}>
       <header className="sticky top-0 z-10 px-4 py-3 backdrop-blur-sm"
@@ -99,7 +108,7 @@ export default async function AdminRequestDetailPage({
         </div>
       </header>
 
-      <RequestDetail request={request} items={items} client={client} />
+      <RequestDetail request={request} items={items} client={client} deliveries={deliveries} />
     </div>
   );
 }

@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { notifyAdminNewRequest } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { client_id, asset_ids, message } = body as {
+    const { client_id, asset_ids, message, shoot_id } = body as {
       client_id: string;
       asset_ids: string[];
       message?: string;
+      shoot_id?: string | null;
     };
 
     if (!client_id || !Array.isArray(asset_ids) || asset_ids.length === 0) {
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
       .from("asset_requests")
       .insert({
         client_id,
-        shoot_id: null,
+        shoot_id: shoot_id ?? null,
         status: "pending",
         total_credit,
         message: message ?? null,
@@ -73,6 +75,17 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Fetch client name for notification
+    const { data: clientRows } = await supabase
+      .from("clients")
+      .select("name")
+      .eq("id", client_id)
+      .limit(1);
+    const clientName = clientRows?.[0]?.name ?? "不明なクライアント";
+
+    // Notify admin (placeholder)
+    await notifyAdminNewRequest(reqRow.id, clientName);
 
     return NextResponse.json({ success: true, request_id: reqRow.id, total_credit });
   } catch (err) {
