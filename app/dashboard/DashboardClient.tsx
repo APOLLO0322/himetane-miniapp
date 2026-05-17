@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Camera,
   Video,
-  Coins,
   X,
   CalendarDays,
   CheckCircle2,
@@ -109,21 +108,21 @@ function ShootFolderCard({
   );
 }
 
-// 素材バッジ
-function FileTypeBadge({ fileType }: { fileType: string }) {
+// 右上バッジ：アイコン + pt数
+function AssetTopBadge({ fileType, creditCost }: { fileType: string; creditCost: number }) {
   const video = isVideo(fileType);
   return (
-    <Badge
-      className="gap-1 hover:opacity-90"
+    <div
+      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold backdrop-blur-sm"
       style={
         video
-          ? { backgroundColor: "#fef9c2", color: "#874b00", border: "none" }
-          : { backgroundColor: C.limeLight, color: C.green, border: "none" }
+          ? { backgroundColor: "rgba(254,249,194,0.9)", color: "#874b00" }
+          : { backgroundColor: "rgba(212,232,160,0.9)", color: C.green }
       }
     >
       {video ? <Video className="h-3 w-3" /> : <Camera className="h-3 w-3" />}
-      {video ? "動画" : "写真"}
-    </Badge>
+      {creditCost}pt
+    </div>
   );
 }
 
@@ -169,7 +168,7 @@ function AssetCard({
           </div>
         )}
         <div className="absolute right-2 top-2">
-          <FileTypeBadge fileType={asset.file_type} />
+          <AssetTopBadge fileType={asset.file_type} creditCost={asset.credit_cost} />
         </div>
         {selectMode && (
           <div className="absolute left-2 top-2">
@@ -186,15 +185,9 @@ function AssetCard({
           </div>
         )}
       </div>
-      <div className="p-3">
-        <p className="text-xs font-mono" style={{ color: C.textFaint }}>{asset.asset_no}</p>
-        <p className="mt-0.5 line-clamp-1 text-sm font-medium" style={{ color: C.text }}>{asset.title}</p>
-        <div className="mt-2 flex items-center justify-end">
-          <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: C.limePale }}>
-            <Coins className="h-3 w-3" style={{ color: C.lime }} />
-            <span className="text-xs font-medium" style={{ color: C.green }}>{asset.credit_cost} pt</span>
-          </div>
-        </div>
+      <div className="px-2.5 py-2">
+        <p className="text-[10px] font-mono leading-none" style={{ color: C.textFaint }}>{asset.asset_no}</p>
+        <p className="mt-0.5 line-clamp-1 text-xs font-medium" style={{ color: C.textMid }}>{asset.title}</p>
       </div>
     </div>
   );
