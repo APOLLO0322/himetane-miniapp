@@ -29,8 +29,11 @@ export async function PATCH(
     }
 
     // status と delivery_url を更新
-    const updatePayload: { status: string; delivery_url?: string | null } = { status };
+    const updatePayload: { status: string; delivery_url?: string | null; delivered_at?: string | null } = { status };
     if (delivery_url !== undefined) updatePayload.delivery_url = delivery_url || null;
+    if (status === "delivered" && current.status !== "delivered") {
+      updatePayload.delivered_at = new Date().toISOString();
+    }
 
     const { data: updated, error: updateError } = await supabase
       .from("asset_requests")

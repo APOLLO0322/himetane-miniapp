@@ -46,7 +46,7 @@ export default async function AdminRequestDetailPage({
   const { data: rawItems } = await supabase
     .from("asset_request_items")
     .select("*")
-    .eq("asset_request_id", id);
+    .eq("request_id", id);
 
   // 素材を一括取得
   const assetIds = [...new Set((rawItems ?? []).map((i) => i.asset_id))];

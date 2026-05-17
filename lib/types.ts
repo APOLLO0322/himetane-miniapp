@@ -53,16 +53,18 @@ export type Asset = {
 export type AssetRequest = {
   id: string;
   client_id: string;
+  shoot_id: string | null;
   status: "pending" | "approved" | "delivered" | string;
   total_credit: number;
-  note: string | null;
+  message: string | null;
   delivery_url: string | null;
+  delivered_at: string | null;
   created_at: string;
 };
 
 export type AssetRequestItem = {
   id: string;
-  asset_request_id: string;
+  request_id: string;
   asset_id: string;
   created_at: string;
 };

@@ -307,11 +307,11 @@ function RequestSheet({
   selectedIds: Set<string>;
   balance: number;
   onClose: () => void;
-  onSubmit: (note: string) => void;
+  onSubmit: (message: string) => void;
   submitting: boolean;
   error: string | null;
 }) {
-  const [note, setNote] = useState("");
+  const [message, setMessage] = useState("");
   const selectedAssets = assets.filter((a) => selectedIds.has(a.id));
   const totalCredit = selectedAssets.reduce((sum, a) => sum + a.credit_cost, 0);
   const shortage = totalCredit > balance;
@@ -396,8 +396,8 @@ function RequestSheet({
             メモ（任意）
           </label>
           <Input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder="担当者へのメッセージ..."
             className="mt-1.5 rounded-xl bg-white text-sm"
             style={{ borderColor: C.border }}
@@ -422,7 +422,7 @@ function RequestSheet({
             キャンセル
           </button>
           <button
-            onClick={() => onSubmit(note)}
+            onClick={() => onSubmit(message)}
             disabled={submitting || shortage}
             className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
             style={{ backgroundColor: C.green }}
@@ -570,7 +570,7 @@ export default function DashboardClient({
     setSelectedIds(new Set());
   }
 
-  async function handleSubmitRequest(note: string) {
+  async function handleSubmitRequest(message: string) {
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -580,7 +580,7 @@ export default function DashboardClient({
         body: JSON.stringify({
           client_id: client.id,
           asset_ids: Array.from(selectedIds),
-          note: note || null,
+          message: message || null,
         }),
       });
       const json = await res.json();

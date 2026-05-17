@@ -85,9 +85,9 @@ export default function RequestDetail({ request, items, client }: Props) {
             year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
           })}</span>
         </div>
-        {request.note && (
+        {request.message && (
           <p className="mt-2 rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: C.bgTint, color: C.textMid }}>
-            メモ: {request.note}
+            メモ: {request.message}
           </p>
         )}
       </div>

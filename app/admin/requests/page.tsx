@@ -54,12 +54,12 @@ export default async function AdminRequestsPage() {
   // アイテム数を一括取得
   const requestIds = (requests ?? []).map((r) => r.id);
   const { data: allItems } = requestIds.length > 0
-    ? await supabase.from("asset_request_items").select("asset_request_id").in("asset_request_id", requestIds)
+    ? await supabase.from("asset_request_items").select("request_id").in("request_id", requestIds)
     : { data: [] };
 
   const itemCountMap = new Map<string, number>();
   for (const item of allItems ?? []) {
-    itemCountMap.set(item.asset_request_id, (itemCountMap.get(item.asset_request_id) ?? 0) + 1);
+    itemCountMap.set(item.request_id, (itemCountMap.get(item.request_id) ?? 0) + 1);
   }
 
   const list = (requests ?? []) as AssetRequest[];
@@ -107,9 +107,9 @@ export default async function AdminRequestsPage() {
                       <span>{new Date(req.created_at).toLocaleDateString("ja-JP", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                       <span>素材 {itemCount} 件</span>
                     </div>
-                    {req.note && (
+                    {req.message && (
                       <p className="mt-1 text-xs truncate" style={{ color: C.textMuted }}>
-                        メモ: {req.note}
+                        メモ: {req.message}
                       </p>
                     )}
                   </div>

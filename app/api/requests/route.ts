@@ -4,10 +4,10 @@ import { supabase } from "@/lib/supabase";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { client_id, asset_ids, note } = body as {
+    const { client_id, asset_ids, message } = body as {
       client_id: string;
       asset_ids: string[];
-      note?: string;
+      message?: string;
     };
 
     if (!client_id || !Array.isArray(asset_ids) || asset_ids.length === 0) {
@@ -40,10 +40,12 @@ export async function POST(request: Request) {
       .from("asset_requests")
       .insert({
         client_id,
+        shoot_id: null,
         status: "pending",
         total_credit,
-        note: note ?? null,
+        message: message ?? null,
         delivery_url: null,
+        delivered_at: null,
       })
       .select()
       .single();
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
 
     // asset_request_items に一括 INSERT
     const items = asset_ids.map((asset_id) => ({
-      asset_request_id: reqRow.id,
+      request_id: reqRow.id,
       asset_id,
     }));
 

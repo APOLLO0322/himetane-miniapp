@@ -111,7 +111,7 @@ export default async function RequestsPage() {
     ? await supabase
         .from("asset_request_items")
         .select("*")
-        .in("asset_request_id", requestIds)
+        .in("request_id", requestIds)
     : { data: [] };
 
   // アイテムに紐づくアセットを一括取得
@@ -125,9 +125,9 @@ export default async function RequestsPage() {
   // リクエストごとにアイテムをグループ化
   const itemsByRequest = new Map<string, (AssetRequestItem & { asset: Asset | null })[]>();
   for (const item of rawItems ?? []) {
-    const list = itemsByRequest.get(item.asset_request_id) ?? [];
+    const list = itemsByRequest.get(item.request_id) ?? [];
     list.push({ ...item, asset: assetMap.get(item.asset_id) ?? null });
-    itemsByRequest.set(item.asset_request_id, list);
+    itemsByRequest.set(item.request_id, list);
   }
 
   const enriched: RequestWithItems[] = (requests ?? []).map((r) => ({
@@ -250,7 +250,7 @@ export default async function RequestsPage() {
                   style={{ backgroundColor: C.bgTint, borderTop: `1px solid ${C.border}` }}
                 >
                   <span className="text-xs" style={{ color: C.textFaint }}>
-                    {req.note ? `メモ: ${req.note}` : ""}
+                    {req.message ? `メモ: ${req.message}` : ""}
                   </span>
                   <div
                     className="flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold"
