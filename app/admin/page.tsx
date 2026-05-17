@@ -1,38 +1,21 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
-  ArrowLeft,
+  Package,
   Upload,
-  CheckCircle2,
-  Camera,
-  Video,
-  Tag,
-  Calendar,
-  Coins,
-  User,
-  Link2,
-  AlertCircle,
+  Clock,
+  CheckCircle,
+  ImageIcon,
+  Users,
+  ChevronRight,
+  Inbox,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { customers, ALL_MONTHS } from "@/lib/dummy-data";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 
 const C = {
   green: "#007956",
-  greenDark: "#005e40",
+  greenDeep: "#004530",
   lime: "#9dc926",
   limeLight: "#d4e8a0",
   limePale: "#f0fdf4",
@@ -45,415 +28,190 @@ const C = {
   bgWarm: "#fafaf9",
 } as const;
 
-const schema = z.object({
-  customerId: z.string().min(1, "顧客を選択してください"),
-  title: z.string().min(1, "タイトルを入力してください"),
-  fileUrl: z.string().url("有効なURLを入力してください"),
-  type: z.enum(["photo", "video"]),
-  tags: z.string().optional(),
-  month: z.string().min(1, "月を選択してください"),
-  credits: z.coerce
-    .number()
-    .int()
-    .min(1, "1以上の値を入力してください")
-    .max(20, "20以下の値を入力してください"),
-  status: z.enum(["draft", "published", "archived"]),
-});
+export default async function AdminPage() {
+  // 統計データを並列取得
+  const [
+    { count: pendingCount },
+    { count: totalRequests },
+    { count: totalAssets },
+    { count: totalClients },
+  ] = await Promise.all([
+    supabase.from("asset_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("asset_requests").select("*", { count: "exact", head: true }),
+    supabase.from("assets").select("*", { count: "exact", head: true }),
+    supabase.from("clients").select("*", { count: "exact", head: true }),
+  ]);
 
-type FormValues = z.infer<typeof schema>;
+  // 最新リクエスト3件
+  const { data: recentRequests } = await supabase
+    .from("asset_requests")
+    .select("id, status, created_at, client_id")
+    .order("created_at", { ascending: false })
+    .limit(3);
 
-const STATUS_OPTIONS = [
-  { value: "published", label: "公開" },
-  { value: "draft", label: "下書き" },
-  { value: "archived", label: "アーカイブ" },
-];
+  const clientIds = [...new Set((recentRequests ?? []).map((r) => r.client_id))];
+  const { data: clients } = clientIds.length > 0
+    ? await supabase.from("clients").select("id, name").in("id", clientIds)
+    : { data: [] };
+  const clientMap = new Map((clients ?? []).map((c) => [c.id, c.name]));
 
-function FieldSection({
-  label,
-  icon,
-  children,
-  error,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  error?: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label
-        className="flex items-center gap-1.5 text-sm font-medium"
-        style={{ color: C.textMid }}
-      >
-        <span style={{ color: C.green }}>{icon}</span>
-        {label}
-      </Label>
-      {children}
-      {error && (
-        <p className="flex items-center gap-1 text-xs text-rose-500">
-          <AlertCircle className="h-3 w-3" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export default function AdminPage() {
-  const [submitted, setSubmitted] = useState(false);
-  const [submittedTitle, setSubmittedTitle] = useState("");
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      type: "photo",
-      status: "draft",
-      credits: 1,
-    },
-  });
-
-  const onSubmit = async (data: FormValues) => {
-    await new Promise((r) => setTimeout(r, 600));
-    console.log("Registered material:", {
-      ...data,
-      tags: data.tags
-        ? data.tags.split(",").map((t) => t.trim()).filter(Boolean)
-        : [],
-    });
-    setSubmittedTitle(data.title);
-    setSubmitted(true);
-    reset();
+  const statusLabel: Record<string, { label: string; color: string; bg: string }> = {
+    pending:   { label: "確認待ち", color: "#92400e", bg: "#fef3c7" },
+    approved:  { label: "承認済み", color: C.green,   bg: C.limePale },
+    delivered: { label: "納品済み", color: "#1d4ed8", bg: "#eff6ff" },
   };
-
-  if (submitted) {
-    return (
-      <div
-        className="flex min-h-screen flex-col items-center justify-center gap-5 px-6 text-center"
-        style={{ backgroundColor: C.bgWarm }}
-      >
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-full"
-          style={{ backgroundColor: C.limePale }}
-        >
-          <CheckCircle2 className="h-10 w-10" style={{ color: C.green }} />
-        </div>
-        <div>
-          <p className="text-lg font-bold" style={{ color: C.text }}>
-            登録しました
-          </p>
-          <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
-            「{submittedTitle}」を素材ライブラリに追加しました
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="rounded-xl"
-            style={{ borderColor: C.border }}
-            onClick={() => setSubmitted(false)}
-          >
-            続けて登録する
-          </Button>
-          <Link href="/dashboard">
-            <Button
-              className="rounded-xl text-white"
-              style={{ backgroundColor: C.green }}
-            >
-              ダッシュボードへ
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen pb-16" style={{ backgroundColor: C.bgWarm }}>
-      {/* Header */}
+      {/* ヘッダー */}
       <header
-        className="sticky top-0 z-10 px-4 py-3 backdrop-blur-sm"
-        style={{
-          borderBottom: `1px solid ${C.border}`,
-          backgroundColor: "rgba(250,250,249,0.85)",
-        }}
+        className="sticky top-0 z-10 px-4 py-4 backdrop-blur-sm"
+        style={{ borderBottom: `1px solid ${C.border}`, backgroundColor: "rgba(250,250,249,0.9)" }}
       >
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <button
-              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-stone-100"
-              style={{ color: C.textMuted }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-sm font-bold" style={{ color: C.text }}>
-              素材を登録
-            </h1>
-            <p className="text-xs" style={{ color: C.textFaint }}>
-              管理者メニュー
-            </p>
+        <h1 className="text-base font-bold" style={{ color: C.green }}>ヒメタネ 管理</h1>
+      </header>
+
+      <div className="px-4 pt-5 space-y-6">
+
+        {/* 統計カード */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: `1px solid ${C.border}` }}>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: "#fef3c7" }}>
+                <Clock className="h-4 w-4" style={{ color: "#92400e" }} />
+              </div>
+              <p className="text-xs font-medium" style={{ color: C.textMuted }}>確認待ち</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold" style={{ color: C.text }}>{pendingCount ?? 0}</p>
+            <p className="text-xs" style={{ color: C.textFaint }}>件のリクエスト</p>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: `1px solid ${C.border}` }}>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: C.limePale }}>
+                <Package className="h-4 w-4" style={{ color: C.green }} />
+              </div>
+              <p className="text-xs font-medium" style={{ color: C.textMuted }}>リクエスト総数</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold" style={{ color: C.text }}>{totalRequests ?? 0}</p>
+            <p className="text-xs" style={{ color: C.textFaint }}>件</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: `1px solid ${C.border}` }}>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: C.limePale }}>
+                <ImageIcon className="h-4 w-4" style={{ color: C.green }} />
+              </div>
+              <p className="text-xs font-medium" style={{ color: C.textMuted }}>素材数</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold" style={{ color: C.text }}>{totalAssets ?? 0}</p>
+            <p className="text-xs" style={{ color: C.textFaint }}>件登録済み</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: `1px solid ${C.border}` }}>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: C.limePale }}>
+                <Users className="h-4 w-4" style={{ color: C.green }} />
+              </div>
+              <p className="text-xs font-medium" style={{ color: C.textMuted }}>クライアント数</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold" style={{ color: C.text }}>{totalClients ?? 0}</p>
+            <p className="text-xs" style={{ color: C.textFaint }}>社</p>
+          </div>
+        </div>
+
+        {/* クイックアクション */}
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: C.textFaint }}>
+            アクション
+          </p>
+          <div className="space-y-2">
             <Link href="/admin/requests">
-              <span
-                className="rounded-xl px-3 py-1.5 text-xs font-medium"
-                style={{ backgroundColor: C.bgTint, color: C.textMid, border: `1px solid ${C.border}` }}
+              <div
+                className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+                style={{ border: `1px solid ${C.border}` }}
               >
-                リクエスト
-              </span>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "#fef3c7" }}>
+                  <Inbox className="h-5 w-5" style={{ color: "#92400e" }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: C.text }}>リクエスト管理</p>
+                  <p className="text-xs" style={{ color: C.textFaint }}>
+                    {pendingCount ? `確認待ち ${pendingCount} 件あり` : "新着リクエストなし"}
+                  </p>
+                </div>
+                {(pendingCount ?? 0) > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
+                    style={{ backgroundColor: "#f59e0b" }}>
+                    {pendingCount}
+                  </span>
+                )}
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
+              </div>
             </Link>
+
             <Link href="/admin/assets/new">
-              <span
-                className="rounded-xl px-3 py-1.5 text-xs font-medium text-white"
-                style={{ backgroundColor: C.green }}
+              <div
+                className="flex items-center gap-4 rounded-2xl px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+                style={{
+                  background: `linear-gradient(135deg, ${C.green} 0%, ${C.greenDeep} 100%)`,
+                  border: `1px solid ${C.green}`,
+                }}
               >
-                ファイルUP
-              </span>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                  <Upload className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">素材をアップロード</p>
+                  <p className="text-xs" style={{ color: C.limeLight }}>ファイルを選択してDBに登録</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-white opacity-70" />
+              </div>
             </Link>
           </div>
         </div>
-      </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5 px-4">
-        {/* Customer */}
-        <FieldSection
-          label="顧客"
-          icon={<User className="h-4 w-4" />}
-          error={errors.customerId?.message}
-        >
-          <Controller
-            name="customerId"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger
-                  className="rounded-xl bg-white"
-                  style={{ borderColor: C.border }}
-                >
-                  <SelectValue placeholder="顧客を選んでください" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </FieldSection>
-
-        {/* Title */}
-        <FieldSection
-          label="タイトル"
-          icon={<Tag className="h-4 w-4" />}
-          error={errors.title?.message}
-        >
-          <Input
-            {...register("title")}
-            placeholder="例: カフェ外観・朝の光"
-            className="rounded-xl bg-white"
-            style={{ borderColor: C.border }}
-          />
-        </FieldSection>
-
-        {/* File URL */}
-        <FieldSection
-          label="ファイルURL"
-          icon={<Link2 className="h-4 w-4" />}
-          error={errors.fileUrl?.message}
-        >
-          <Input
-            {...register("fileUrl")}
-            placeholder="https://..."
-            className="rounded-xl bg-white"
-            style={{ borderColor: C.border }}
-            type="url"
-          />
-        </FieldSection>
-
-        {/* Type */}
-        <FieldSection
-          label="種別"
-          icon={<Camera className="h-4 w-4" />}
-          error={errors.type?.message}
-        >
-          <Controller
-            name="type"
-            control={control}
-            render={({ field }) => (
-              <div className="flex gap-3">
-                {[
-                  { value: "photo" as const, label: "写真", icon: <Camera className="h-4 w-4" /> },
-                  { value: "video" as const, label: "動画", icon: <Video className="h-4 w-4" /> },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => field.onChange(opt.value)}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-3 text-sm font-medium transition-colors"
-                    style={
-                      field.value === opt.value
-                        ? { borderColor: C.green, backgroundColor: C.limePale, color: C.green }
-                        : { borderColor: C.border, backgroundColor: "white", color: C.textMuted }
-                    }
-                  >
-                    {opt.icon}
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          />
-        </FieldSection>
-
-        {/* Tags */}
-        <FieldSection
-          label="タグ（カンマ区切り）"
-          icon={<Tag className="h-4 w-4" />}
-        >
-          <Input
-            {...register("tags")}
-            placeholder="例: 外観, 朝, SNS"
-            className="rounded-xl bg-white"
-            style={{ borderColor: C.border }}
-          />
-          <p className="text-xs" style={{ color: C.textFaint }}>
-            複数のタグはカンマで区切ってください
-          </p>
-        </FieldSection>
-
-        {/* Month */}
-        <FieldSection
-          label="対象月"
-          icon={<Calendar className="h-4 w-4" />}
-          error={errors.month?.message}
-        >
-          <Controller
-            name="month"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger
-                  className="rounded-xl bg-white"
-                  style={{ borderColor: C.border }}
-                >
-                  <SelectValue placeholder="月を選んでください" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ALL_MONTHS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </FieldSection>
-
-        {/* Credits */}
-        <FieldSection
-          label="消費クレジット (pt)"
-          icon={<Coins className="h-4 w-4" />}
-          error={errors.credits?.message}
-        >
-          <div className="flex items-center gap-3">
-            <Controller
-              name="credits"
-              control={control}
-              render={({ field }) => (
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => field.onChange(n)}
-                      className="h-10 w-10 rounded-xl border text-sm font-semibold transition-colors"
-                      style={
-                        field.value === n
-                          ? { borderColor: C.lime, backgroundColor: C.limePale, color: C.green }
-                          : { borderColor: C.border, backgroundColor: "white", color: C.textMuted }
-                      }
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              )}
-            />
-            <span className="text-xs" style={{ color: C.textFaint }}>pt</span>
+        {/* 最新リクエスト */}
+        {(recentRequests ?? []).length > 0 && (
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: C.textFaint }}>
+                最新リクエスト
+              </p>
+              <Link href="/admin/requests" className="text-xs" style={{ color: C.green }}>
+                すべて見る
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {(recentRequests ?? []).map((req) => {
+                const s = statusLabel[req.status] ?? { label: req.status, color: C.textMuted, bg: C.bgTint };
+                return (
+                  <Link key={req.id} href={`/admin/requests/${req.id}`}>
+                    <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm"
+                      style={{ border: `1px solid ${C.border}` }}>
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: s.bg }}>
+                        <CheckCircle className="h-4 w-4" style={{ color: s.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium" style={{ color: C.text }}>
+                          {clientMap.get(req.client_id) ?? "不明なクライアント"}
+                        </p>
+                        <p className="text-xs" style={{ color: C.textFaint }}>
+                          {new Date(req.created_at).toLocaleDateString("ja-JP", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium"
+                        style={{ backgroundColor: s.bg, color: s.color }}>
+                        {s.label}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <p className="text-xs" style={{ color: C.textFaint }}>
-            写真: 1pt / ショート動画: 2-3pt / 長尺動画: 4-5pt が目安
-          </p>
-        </FieldSection>
-
-        {/* Status */}
-        <FieldSection
-          label="ステータス"
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          error={errors.status?.message}
-        >
-          <Controller
-            name="status"
-            control={control}
-            render={({ field }) => (
-              <div className="flex gap-2">
-                {STATUS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => field.onChange(opt.value)}
-                    className="flex-1 rounded-xl border py-2.5 text-xs font-medium transition-colors"
-                    style={
-                      field.value === opt.value
-                        ? { borderColor: C.green, backgroundColor: C.limePale, color: C.green }
-                        : { borderColor: C.border, backgroundColor: "white", color: C.textMuted }
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          />
-        </FieldSection>
-
-        <div className="h-px" style={{ backgroundColor: C.border }} />
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-4 text-base font-semibold text-white transition-opacity disabled:opacity-60"
-          style={{ backgroundColor: C.green }}
-        >
-          {isSubmitting ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              登録中...
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4" />
-              素材を登録する
-            </>
-          )}
-        </button>
-
-        <p className="text-center text-xs" style={{ color: C.textFaint }}>
-          Supabase連携後、実際のDBに保存されます
-        </p>
-      </form>
+        )}
+      </div>
     </div>
   );
 }
