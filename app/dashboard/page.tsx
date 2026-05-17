@@ -14,7 +14,15 @@ export default async function DashboardPage() {
     .eq("line_user_id", LINE_USER_ID)
     .limit(1);
 
-  if (userError) throw new Error(`ユーザー取得エラー: ${userError.message}`);
+  if (userError) {
+    console.error("ユーザー取得エラー:", userError.message);
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
+        <p className="text-base font-bold text-[#292524]">データの読み込みに失敗しました</p>
+        <p className="text-sm text-[#79716b]">しばらくしてからもう一度お試しください</p>
+      </div>
+    );
+  }
 
   const currentUser = userRows?.[0] ?? null;
 
@@ -36,7 +44,15 @@ export default async function DashboardPage() {
     .eq("user_id", currentUser.id)
     .order("created_at");
 
-  if (cuError) throw new Error(`クライアント紐付け取得エラー: ${cuError.message}`);
+  if (cuError) {
+    console.error("クライアント紐付け取得エラー:", cuError.message);
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
+        <p className="text-base font-bold text-[#292524]">データの読み込みに失敗しました</p>
+        <p className="text-sm text-[#79716b]">しばらくしてからもう一度お試しください</p>
+      </div>
+    );
+  }
 
   // 複数clientがある場合は最初を使用（将来: 切替UI追加）
   const firstClientId = clientUserRows?.[0]?.client_id ?? null;
@@ -59,7 +75,15 @@ export default async function DashboardPage() {
     .eq("id", firstClientId)
     .limit(1);
 
-  if (clientError) throw new Error(`クライアント取得エラー: ${clientError.message}`);
+  if (clientError) {
+    console.error("クライアント取得エラー:", clientError.message);
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
+        <p className="text-base font-bold text-[#292524]">データの読み込みに失敗しました</p>
+        <p className="text-sm text-[#79716b]">しばらくしてからもう一度お試しください</p>
+      </div>
+    );
+  }
 
   const client = clientRows?.[0] ?? null;
 
@@ -95,9 +119,9 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false }),
   ]);
 
-  if (assetsRes.error) throw new Error(`素材取得エラー: ${assetsRes.error.message}`);
-  if (shootsRes.error) throw new Error(`撮影データ取得エラー: ${shootsRes.error.message}`);
-  if (transactionsRes.error) throw new Error(`クレジット取得エラー: ${transactionsRes.error.message}`);
+  if (assetsRes.error) console.error("素材取得エラー:", assetsRes.error.message);
+  if (shootsRes.error) console.error("撮影データ取得エラー:", shootsRes.error.message);
+  if (transactionsRes.error) console.error("クレジット取得エラー:", transactionsRes.error.message);
 
   return (
     <DashboardClient
