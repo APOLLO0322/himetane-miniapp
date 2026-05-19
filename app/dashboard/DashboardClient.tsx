@@ -151,7 +151,7 @@ export default function DashboardClient({
       <div className="px-4 pb-1 pt-5">
         <p className="text-xs" style={{ color: C.textMuted }}>こんにちは</p>
         <p className="text-xl font-bold" style={{ color: C.text }}>
-          {currentUser.display_name ?? client.name}
+          {currentUser.line_display_name ?? client.name}
           <span className="font-normal">さん</span>
         </p>
         <p className="mt-0.5 text-xs" style={{ color: C.textFaint }}>{client.name}</p>

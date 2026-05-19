@@ -167,6 +167,38 @@ export default async function AdminPage() {
               </div>
             </Link>
 
+            <Link href="/admin/clients">
+              <div
+                className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+                style={{ border: `1px solid ${C.border}` }}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: C.limePale }}>
+                  <Users className="h-5 w-5" style={{ color: C.green }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: C.text }}>クライアント管理</p>
+                  <p className="text-xs" style={{ color: C.textFaint }}>店舗・契約情報を管理</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
+              </div>
+            </Link>
+
+            <Link href="/admin/users">
+              <div
+                className="flex items-center gap-4 rounded-2xl bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+                style={{ border: `1px solid ${C.border}` }}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "#ede9fe" }}>
+                  <Users className="h-5 w-5" style={{ color: "#7c3aed" }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: C.text }}>ユーザー管理</p>
+                  <p className="text-xs" style={{ color: C.textFaint }}>権限・アカウントを管理</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
+              </div>
+            </Link>
+
             <Link href="/admin/assets/new">
               <div
                 className="flex items-center gap-4 rounded-2xl px-4 py-4 shadow-sm transition-shadow hover:shadow-md"

@@ -1,8 +1,11 @@
+export type Role = "admin_all" | "admin_creator" | "client_owner" | "client_manager";
+
 export type User = {
   id: string;
   line_user_id: string;
-  display_name: string | null;
+  line_display_name: string | null;
   picture_url: string | null;
+  role: Role;
   created_at: string;
 };
 
@@ -10,7 +13,7 @@ export type ClientUser = {
   id: string;
   user_id: string;
   client_id: string;
-  role: string | null;
+  role: "client_owner" | "client_manager" | string;
   created_at: string;
 };
 
@@ -20,6 +23,7 @@ export type Client = {
   line_user_id: string | null;
   line_display_name: string | null;
   plan_status: string | null;
+  memo: string | null;
   created_at: string;
 };
 
