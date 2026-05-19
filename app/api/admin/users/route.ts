@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     const { data: user, error: userError } = await supabase
       .from("users")
-      .insert({ line_user_id: line_user_id.trim(), line_display_name: line_display_name.trim(), role })
+      .insert({ line_user_id: line_user_id.trim(), line_display_name: line_display_name.trim(), role, picture_url: null })
       .select()
       .single();
 

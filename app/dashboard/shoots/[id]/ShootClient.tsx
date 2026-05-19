@@ -47,9 +47,13 @@ function AssetCard({
       }}
       onClick={() => onToggle(asset.id)}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden" style={{ backgroundColor: C.bgTint }}>
+      <div
+        className="relative aspect-[4/3] w-full overflow-hidden"
+        style={{ backgroundColor: C.bgTint }}
+        onContextMenu={(e) => e.preventDefault()}
+      >
         {asset.preview_url ? (
-          <Image src={asset.preview_url} alt={asset.title} fill className="object-cover" unoptimized />
+          <Image src={asset.preview_url} alt={asset.title} fill className="object-cover pointer-events-none select-none" draggable={false} unoptimized />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             {video

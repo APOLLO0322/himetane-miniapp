@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Clock, CheckCircle, Package, Coins, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, Package, Coins, Download } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getCurrentLineUserId } from "@/lib/auth";
 import type { AssetRequest, AssetRequestItem, Asset, Delivery, Shoot } from "@/lib/types";
@@ -221,8 +221,7 @@ export default async function DashboardRequestDetailPage({
                 <a
                   key={d.id}
                   href={d.delivery_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  download
                   className="flex items-center justify-between rounded-2xl bg-white px-4 py-3"
                   style={{ border: `1px solid ${C.border}` }}
                 >
@@ -239,10 +238,10 @@ export default async function DashboardRequestDetailPage({
                   </div>
                   <div
                     className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium"
-                    style={{ backgroundColor: C.limePale, color: C.green }}
+                    style={{ backgroundColor: "#eff6ff", color: "#1d4ed8" }}
                   >
-                    <ExternalLink className="h-3 w-3" />
-                    開く
+                    <Download className="h-3 w-3" />
+                    ダウンロード
                   </div>
                 </a>
               ))}
@@ -256,13 +255,12 @@ export default async function DashboardRequestDetailPage({
             <p className="mb-2 text-sm font-semibold" style={{ color: C.textMid }}>納品データ</p>
             <a
               href={request.delivery_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm"
-              style={{ color: C.green }}
+              download
+              className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium"
+              style={{ backgroundColor: "#eff6ff", color: "#1d4ed8" }}
             >
-              <ExternalLink className="h-4 w-4" />
-              納品データを開く
+              <Download className="h-4 w-4" />
+              ダウンロード
             </a>
           </div>
         )}

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("clients")
-      .insert({ name: name.trim(), plan_status: plan_status ?? "active", memo: memo ?? null })
+      .insert({ name: name.trim(), plan_status: plan_status ?? "active", memo: memo ?? null, line_user_id: null, line_display_name: null })
       .select()
       .single();
 
