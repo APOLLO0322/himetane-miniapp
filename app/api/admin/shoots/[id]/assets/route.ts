@@ -66,7 +66,7 @@ export async function POST(
         title,
         file_type,
         credit_cost,
-        status: "draft",
+        status: "selectable",
         preview_url,
         original_url: preview_url,
         thumbnail_url: null,
