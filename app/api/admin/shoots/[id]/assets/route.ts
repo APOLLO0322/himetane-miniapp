@@ -50,6 +50,7 @@ export async function POST(
       const blob = await put(blobPath, file, {
         access: "public",
         contentType: file.type || undefined,
+        addRandomSuffix: true,
       });
 
       preview_url = blob.url;
