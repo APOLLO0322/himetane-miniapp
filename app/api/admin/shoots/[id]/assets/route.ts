@@ -70,7 +70,6 @@ export async function POST(
         preview_url,
         original_url: preview_url,
         thumbnail_url: null,
-        tags: null,
         blob_path,
       })
       .select()
