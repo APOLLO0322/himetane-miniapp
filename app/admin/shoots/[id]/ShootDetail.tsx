@@ -57,50 +57,62 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
   const [assets, setAssets] = useState<Asset[]>(initialAssets);
 
   // Asset add form state
-  const [addTitle, setAddTitle] = useState("");
   const [addFileType, setAddFileType] = useState("photo");
   const [addCreditCost, setAddCreditCost] = useState(1);
-  const [addFile, setAddFile] = useState<File | null>(null);
+  const [addFiles, setAddFiles] = useState<File[]>([]);
   const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addProgress, setAddProgress] = useState<{ done: number; total: number } | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState(false);
 
   // Status update
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  async function handleAddAsset(e: React.FormEvent) {
+  async function handleAddAssets(e: React.FormEvent) {
     e.preventDefault();
-    if (!addTitle.trim()) {
-      setAddError("タイトルは必須です");
+    if (addFiles.length === 0) {
+      setAddError("ファイルを選択してください");
       return;
     }
     setAddSubmitting(true);
     setAddError(null);
     setAddSuccess(false);
-    try {
-      const formData = new FormData();
-      formData.append("title", addTitle.trim());
-      formData.append("file_type", addFileType);
-      formData.append("credit_cost", String(addCreditCost));
-      if (addFile) formData.append("file", addFile);
+    setAddProgress({ done: 0, total: addFiles.length });
 
-      const res = await fetch(`/api/admin/shoots/${shoot.id}/assets`, {
-        method: "POST",
-        body: formData,
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "エラーが発生しました");
-      setAssets((prev) => [...prev, json.asset]);
-      setAddTitle("");
-      setAddFile(null);
-      setAddCreditCost(1);
-      setAddSuccess(true);
-      setTimeout(() => setAddSuccess(false), 3000);
-    } catch (err) {
-      setAddError(err instanceof Error ? err.message : "エラーが発生しました");
-    } finally {
-      setAddSubmitting(false);
+    const uploaded: Asset[] = [];
+    for (let i = 0; i < addFiles.length; i++) {
+      const file = addFiles[i];
+      const title = file.name.replace(/\.[^.]+$/, ""); // 拡張子除去
+      try {
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("file_type", addFileType);
+        formData.append("credit_cost", String(addCreditCost));
+        formData.append("file", file);
+
+        const res = await fetch(`/api/admin/shoots/${shoot.id}/assets`, {
+          method: "POST",
+          body: formData,
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(`${file.name}: ${json.error ?? "エラー"}`);
+        uploaded.push(json.asset);
+      } catch (err) {
+        setAddError(err instanceof Error ? err.message : "エラーが発生しました");
+        setAddSubmitting(false);
+        setAddProgress(null);
+        return;
+      }
+      setAddProgress({ done: i + 1, total: addFiles.length });
     }
+
+    setAssets((prev) => [...prev, ...uploaded]);
+    setAddFiles([]);
+    setAddCreditCost(1);
+    setAddProgress(null);
+    setAddSuccess(true);
+    setTimeout(() => setAddSuccess(false), 3000);
+    setAddSubmitting(false);
   }
 
   async function handleStatusChange(assetId: string, newStatus: string) {
@@ -178,18 +190,7 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
       {/* 素材追加フォーム */}
       <div className="rounded-2xl bg-white px-4 py-4" style={{ border: `1px solid ${C.border}` }}>
         <p className="mb-3 text-sm font-semibold" style={{ color: C.textMid }}>素材を追加</p>
-        <form onSubmit={handleAddAsset} className="space-y-3">
-          <div>
-            <label style={labelStyle}>タイトル *</label>
-            <input
-              type="text"
-              value={addTitle}
-              onChange={(e) => setAddTitle(e.target.value)}
-              placeholder="商品A 正面"
-              style={inputStyle}
-              required
-            />
-          </div>
+        <form onSubmit={handleAddAssets} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label style={labelStyle}>ファイル種別</label>
@@ -203,7 +204,7 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
               </select>
             </div>
             <div>
-              <label style={labelStyle}>クレジット</label>
+              <label style={labelStyle}>クレジット/件</label>
               <input
                 type="number"
                 min={1}
@@ -216,33 +217,41 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
           <div>
             <label style={labelStyle}>
               <Upload className="inline h-3 w-3 mr-1" />
-              ファイル（任意）
+              ファイル（複数選択可）
             </label>
             <label
               className="flex flex-col items-center justify-center w-full rounded-xl cursor-pointer transition-colors"
               style={{
-                border: `2px dashed ${addFile ? C.green : C.border}`,
-                backgroundColor: addFile ? C.limePale : C.bgTint,
+                border: `2px dashed ${addFiles.length > 0 ? C.green : C.border}`,
+                backgroundColor: addFiles.length > 0 ? C.limePale : C.bgTint,
                 padding: "1rem",
               }}
             >
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept={addFileType === "video" ? "video/*" : "image/*"}
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setAddFile(f);
-                  if (f && f.type.startsWith("video")) setAddFileType("video");
-                  else if (f) setAddFileType("photo");
+                  setAddFiles(Array.from(e.target.files ?? []));
                 }}
               />
-              {addFile ? (
-                <p className="text-sm font-medium" style={{ color: C.green }}>{addFile.name}</p>
+              {addFiles.length > 0 ? (
+                <div className="w-full space-y-1">
+                  <p className="text-xs font-medium mb-2" style={{ color: C.green }}>
+                    {addFiles.length} 件選択済み
+                  </p>
+                  {addFiles.map((f, i) => (
+                    <p key={i} className="truncate text-xs" style={{ color: C.textMid }}>
+                      · {f.name}
+                    </p>
+                  ))}
+                </div>
               ) : (
                 <>
                   <Upload className="h-6 w-6 mb-1" style={{ color: C.textFaint }} />
                   <p className="text-xs" style={{ color: C.textFaint }}>タップしてファイルを選択</p>
+                  <p className="text-xs mt-0.5" style={{ color: C.textFaint }}>複数選択OK</p>
                 </>
               )}
             </label>
@@ -267,15 +276,32 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
             </div>
           )}
 
+          {addProgress && (
+            <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: C.limePale }}>
+              <div className="flex justify-between text-xs mb-1.5" style={{ color: C.green }}>
+                <span>アップロード中...</span>
+                <span>{addProgress.done} / {addProgress.total} 件</span>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: C.limeLight }}>
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${(addProgress.done / addProgress.total) * 100}%`, backgroundColor: C.green }}
+                />
+              </div>
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={addSubmitting}
+            disabled={addSubmitting || addFiles.length === 0}
             className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white disabled:opacity-50"
             style={{ backgroundColor: C.green }}
           >
             {addSubmitting ? (
-              <><Loader2 className="h-4 w-4 animate-spin" />追加中...</>
-            ) : "素材を追加する"}
+              <><Loader2 className="h-4 w-4 animate-spin" />アップロード中...</>
+            ) : addFiles.length > 0 ? (
+              `${addFiles.length} 件をアップロード`
+            ) : "ファイルを選択してください"}
           </button>
         </form>
       </div>
