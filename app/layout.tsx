@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { Zen_Kaku_Gothic_New } from "next/font/google";
+import "@fontsource/zen-kaku-gothic-new/400.css";
+import "@fontsource/zen-kaku-gothic-new/500.css";
+import "@fontsource/zen-kaku-gothic-new/700.css";
 import "./globals.css";
-
-const zenKaku = Zen_Kaku_Gothic_New({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-zen-kaku",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "ヒメタネ",
@@ -20,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" className={zenKaku.variable}>
-      <body className="font-sans">{children}</body>
+    <html lang="ja">
+      <body style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif" }}>{children}</body>
     </html>
   );
 }
