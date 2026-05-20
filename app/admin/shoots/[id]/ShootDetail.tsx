@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  Camera, Video, AlertCircle, Loader2, CheckCircle2, Link2,
+  Camera, Video, AlertCircle, Loader2, CheckCircle2, Upload,
 } from "lucide-react";
 import type { Shoot, Asset, Client } from "@/lib/types";
 
@@ -57,12 +57,10 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
   const [assets, setAssets] = useState<Asset[]>(initialAssets);
 
   // Asset add form state
-  // NOTE: Vercel Blob (BLOB_READ_WRITE_TOKEN) is not configured yet.
-  // Using URL input instead of file picker for now.
   const [addTitle, setAddTitle] = useState("");
   const [addFileType, setAddFileType] = useState("photo");
   const [addCreditCost, setAddCreditCost] = useState(1);
-  const [addPreviewUrl, setAddPreviewUrl] = useState("");
+  const [addFile, setAddFile] = useState<File | null>(null);
   const [addSubmitting, setAddSubmitting] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState(false);
@@ -80,21 +78,21 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
     setAddError(null);
     setAddSuccess(false);
     try {
+      const formData = new FormData();
+      formData.append("title", addTitle.trim());
+      formData.append("file_type", addFileType);
+      formData.append("credit_cost", String(addCreditCost));
+      if (addFile) formData.append("file", addFile);
+
       const res = await fetch(`/api/admin/shoots/${shoot.id}/assets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: addTitle.trim(),
-          file_type: addFileType,
-          credit_cost: addCreditCost,
-          preview_url: addPreviewUrl.trim() || null,
-        }),
+        body: formData,
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "エラーが発生しました");
       setAssets((prev) => [...prev, json.asset]);
       setAddTitle("");
-      setAddPreviewUrl("");
+      setAddFile(null);
       setAddCreditCost(1);
       setAddSuccess(true);
       setTimeout(() => setAddSuccess(false), 3000);
@@ -180,9 +178,6 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
       {/* 素材追加フォーム */}
       <div className="rounded-2xl bg-white px-4 py-4" style={{ border: `1px solid ${C.border}` }}>
         <p className="mb-3 text-sm font-semibold" style={{ color: C.textMid }}>素材を追加</p>
-        <p className="mb-3 text-xs" style={{ color: C.textFaint }}>
-          ※ Vercel Blob が未設定のため、URLで登録します（実ファイルアップロードは後で対応）
-        </p>
         <form onSubmit={handleAddAsset} className="space-y-3">
           <div>
             <label style={labelStyle}>タイトル *</label>
@@ -220,16 +215,37 @@ export default function ShootDetail({ shoot, client, assets: initialAssets }: Pr
           </div>
           <div>
             <label style={labelStyle}>
-              <Link2 className="inline h-3 w-3 mr-1" />
-              プレビューURL（任意）
+              <Upload className="inline h-3 w-3 mr-1" />
+              ファイル（任意）
             </label>
-            <input
-              type="url"
-              value={addPreviewUrl}
-              onChange={(e) => setAddPreviewUrl(e.target.value)}
-              placeholder="https://..."
-              style={inputStyle}
-            />
+            <label
+              className="flex flex-col items-center justify-center w-full rounded-xl cursor-pointer transition-colors"
+              style={{
+                border: `2px dashed ${addFile ? C.green : C.border}`,
+                backgroundColor: addFile ? C.limePale : C.bgTint,
+                padding: "1rem",
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setAddFile(f);
+                  if (f && f.type.startsWith("video")) setAddFileType("video");
+                  else if (f) setAddFileType("photo");
+                }}
+              />
+              {addFile ? (
+                <p className="text-sm font-medium" style={{ color: C.green }}>{addFile.name}</p>
+              ) : (
+                <>
+                  <Upload className="h-6 w-6 mb-1" style={{ color: C.textFaint }} />
+                  <p className="text-xs" style={{ color: C.textFaint }}>タップしてファイルを選択</p>
+                </>
+              )}
+            </label>
           </div>
 
           {addError && (
