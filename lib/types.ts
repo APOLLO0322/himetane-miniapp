@@ -46,12 +46,9 @@ export type Asset = {
   preview_url: string | null;
   original_url: string | null;
   thumbnail_url: string | null;
-  file_url: string | null;
   file_type: string;
   credit_cost: number;
   status: "draft" | "selectable" | "requested" | "delivered" | "archived" | string;
-  tags: string[] | null;
-  month: string | null;
   blob_path: string | null;
   created_at: string;
 };

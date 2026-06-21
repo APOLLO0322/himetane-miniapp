@@ -3,6 +3,7 @@ import "@fontsource/zen-kaku-gothic-new/400.css";
 import "@fontsource/zen-kaku-gothic-new/500.css";
 import "@fontsource/zen-kaku-gothic-new/700.css";
 import "./globals.css";
+import LiffProvider from "@/components/LiffProvider";
 
 export const metadata: Metadata = {
   title: "ヒメタネ",
@@ -16,7 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif" }}>{children}</body>
+      <body style={{ fontFamily: "'Zen Kaku Gothic New', sans-serif" }}>
+        <LiffProvider>{children}</LiffProvider>
+      </body>
     </html>
   );
 }

@@ -51,9 +51,6 @@ export async function POST(request: Request) {
         preview_url: blob.url,
         original_url: blob.url,
         thumbnail_url: null,
-        file_url: blob.url,
-        tags: null,
-        month: null,
         blob_path: blobPath,
       })
       .select()
