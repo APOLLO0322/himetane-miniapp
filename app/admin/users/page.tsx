@@ -105,11 +105,12 @@ export default async function AdminUsersPage() {
             {userList.map((user) => {
               const badge = ROLE_BADGE[user.role] ?? { label: user.role, color: C.textMuted, bg: C.bgTint };
               const clientName = userClientMap.get(user.id);
+              const isUnlinked = !userClientMap.has(user.id) && !["admin_all","admin_creator"].includes(user.role);
               return (
+                <Link key={user.id} href={`/admin/users/${user.id}`} className="block">
                 <div
-                  key={user.id}
                   className="flex items-center gap-3 rounded-2xl bg-white px-4 py-4 shadow-sm"
-                  style={{ border: `1px solid ${C.border}` }}
+                  style={{ border: `1px solid ${isUnlinked ? "#fca5a5" : C.border}`, backgroundColor: isUnlinked ? "#fff5f5" : "white" }}
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: C.bgTint }}>
                     <UserCircle className="h-5 w-5" style={{ color: C.textMuted }} />
@@ -131,7 +132,9 @@ export default async function AdminUsersPage() {
                       {new Date(user.created_at).toLocaleDateString("ja-JP")}
                     </p>
                   </div>
+                  <ChevronRight className="h-4 w-4 shrink-0" style={{ color: C.textFaint }} />
                 </div>
+                </Link>
               );
             })}
           </div>

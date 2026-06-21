@@ -28,11 +28,14 @@ export default async function DashboardPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
-        <p className="text-base font-bold text-[#292524]">ユーザーが見つかりません</p>
-        <p className="text-sm text-[#79716b]">
-          Supabase の users テーブルに line_user_id: {LINE_USER_ID} を追加してください
-        </p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-8 text-center bg-[#fafaf9]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f0fdf4]">
+          <span className="text-2xl">🌱</span>
+        </div>
+        <div>
+          <p className="text-base font-bold text-[#292524]">アカウントを準備中です</p>
+          <p className="mt-1 text-sm text-[#79716b]">担当者がアカウントを設定するまで少々お待ちください</p>
+        </div>
       </div>
     );
   }
@@ -59,11 +62,14 @@ export default async function DashboardPage() {
 
   if (!firstClientId) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
-        <p className="text-base font-bold text-[#292524]">所属クライアントがありません</p>
-        <p className="text-sm text-[#79716b]">
-          client_users テーブルにこのユーザーの紐付けを追加してください
-        </p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-8 text-center bg-[#fafaf9]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f0fdf4]">
+          <span className="text-2xl">🌱</span>
+        </div>
+        <div>
+          <p className="text-base font-bold text-[#292524]">アカウントを準備中です</p>
+          <p className="mt-1 text-sm text-[#79716b]">担当者がアカウントを設定するまで少々お待ちください</p>
+        </div>
       </div>
     );
   }
@@ -89,11 +95,14 @@ export default async function DashboardPage() {
 
   if (!client) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center bg-[#fafaf9]">
-        <p className="text-base font-bold text-[#292524]">所属クライアントがありません</p>
-        <p className="text-sm text-[#79716b]">
-          client_users テーブルにこのユーザーの紐付けを追加してください
-        </p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-8 text-center bg-[#fafaf9]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f0fdf4]">
+          <span className="text-2xl">🌱</span>
+        </div>
+        <div>
+          <p className="text-base font-bold text-[#292524]">アカウントを準備中です</p>
+          <p className="mt-1 text-sm text-[#79716b]">担当者がアカウントを設定するまで少々お待ちください</p>
+        </div>
       </div>
     );
   }

@@ -21,7 +21,6 @@ export default function LiffProvider({ children }: { children: React.ReactNode }
 
     (async () => {
       try {
-        // 動的importでSSRを完全回避
         const liff = (await import("@line/liff")).default;
         await liff.init({ liffId });
 
@@ -31,7 +30,20 @@ export default function LiffProvider({ children }: { children: React.ReactNode }
         }
 
         const profile = await liff.getProfile();
+
+        // Cookieをセット
         setCookie(LINE_USER_COOKIE, profile.userId);
+
+        // DBにユーザーを自動登録（初回）or 情報更新
+        await fetch("/api/auth/line", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            line_user_id: profile.userId,
+            line_display_name: profile.displayName,
+            picture_url: profile.pictureUrl ?? null,
+          }),
+        });
       } catch (err) {
         console.error("LIFF初期化エラー:", err);
         setCookie(LINE_USER_COOKIE, DEV_FALLBACK_USER_ID);
