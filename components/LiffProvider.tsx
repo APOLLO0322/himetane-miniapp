@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { initLiff, liff } from "@/lib/liff";
 
 const LINE_USER_COOKIE = "line_user_id";
-
-/** LIFF IDを設定するまでの間、開発用フォールバックIDを使う */
 const DEV_FALLBACK_USER_ID = "U_TEST_USER_001";
 
 function setCookie(name: string, value: string, days = 7) {
@@ -17,15 +14,17 @@ export default function LiffProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
 
-    // LIFF IDが未設定 → 開発用フォールバック
     if (!liffId) {
       setCookie(LINE_USER_COOKIE, DEV_FALLBACK_USER_ID);
       return;
     }
 
-    initLiff()
-      .then(async () => {
-        // LINEアプリ外からアクセスした場合はLINEログインへリダイレクト
+    (async () => {
+      try {
+        // 動的importでSSRを完全回避
+        const liff = (await import("@line/liff")).default;
+        await liff.init({ liffId });
+
         if (!liff.isLoggedIn()) {
           liff.login({ redirectUri: window.location.href });
           return;
@@ -33,12 +32,11 @@ export default function LiffProvider({ children }: { children: React.ReactNode }
 
         const profile = await liff.getProfile();
         setCookie(LINE_USER_COOKIE, profile.userId);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("LIFF初期化エラー:", err);
-        // エラー時は開発用フォールバック（本番では適切なエラー画面を表示すること）
         setCookie(LINE_USER_COOKIE, DEV_FALLBACK_USER_ID);
-      });
+      }
+    })();
   }, []);
 
   return <>{children}</>;
